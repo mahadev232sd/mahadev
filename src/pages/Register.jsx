@@ -4,7 +4,6 @@ import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
-import DrPlayLogo from '../components/DrPlayLogo';
 import WhatsAppFab from '../components/WhatsAppFab';
 
 function normalizePhone(input) {
@@ -91,7 +90,12 @@ export default function Register() {
   return (
     <div className="relative min-h-[100dvh] bg-black px-4 py-8 sm:px-6">
       <div className="mx-auto flex w-full max-w-[420px] flex-col items-center">
-        <DrPlayLogo className="mb-8" />
+        <div className="mb-8 text-center">
+          <p className="text-[42px] font-black leading-none tracking-tight text-white">MAHADEV</p>
+          <div className="mx-auto mt-1.5 w-[170px] rounded-md bg-amber-400 px-2 py-1 shadow-inner">
+            <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-black">BOOK</p>
+          </div>
+        </div>
 
         <div className="w-full rounded-2xl bg-white p-6 shadow-xl sm:p-8">
           <form onSubmit={onSubmit} className="space-y-5">
