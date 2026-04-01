@@ -36,11 +36,20 @@ export function AuthProvider({ children }) {
   }, [token, refreshUser]);
 
   const login = useCallback(async (payload) => {
-    const body =
-      payload.identifier != null
-        ? { identifier: String(payload.identifier).trim(), password: payload.password }
-        : payload;
-    const { data } = await api.post('/auth/login', body);
+    let data;
+    if (payload?.otpLogin) {
+      const body = {
+        phone: String(payload.phone || '').trim(),
+        otp: String(payload.otp || '').trim(),
+      };
+      ({ data } = await api.post('/auth/login-otp', body));
+    } else {
+      const body =
+        payload.identifier != null
+          ? { identifier: String(payload.identifier).trim(), password: payload.password }
+          : payload;
+      ({ data } = await api.post('/auth/login', body));
+    }
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
