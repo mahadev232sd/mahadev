@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Filter, Wallet, X } from 'lucide-react';
+import { Filter, Wallet, X, ZoomIn } from 'lucide-react';
 import api from '../api/client';
 import IdsTopNav from '../components/IdsTopNav';
 import AnnouncementBar from '../components/AnnouncementBar';
@@ -17,10 +17,19 @@ function statusLabel(status) {
   return status;
 }
 
+function resolveUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const apiBase = import.meta.env.VITE_API_URL?.trim();
+  if (apiBase) return `${apiBase.replace(/\/api\/?$/, '')}${path}`;
+  return path;
+}
+
 export default function Passbook() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [proofModal, setProofModal] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
     type: '',
@@ -89,47 +98,81 @@ export default function Passbook() {
           <p className="py-12 text-center text-zinc-500">No transactions yet.</p>
         ) : (
           <ul className="space-y-3">
-            {transactions.map((tx) => (
-              <li
-                key={tx._id}
-                className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-surface-card p-4 shadow-card"
-              >
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                    tx.type === 'deposit' ? 'bg-emerald-600/30 text-emerald-400' : 'bg-red-600/30 text-red-400'
+            {transactions.map((tx) => {
+              const proof = tx.payoutProofImage || tx.proofImage;
+              return (
+                <li
+                  key={tx._id}
+                  onClick={() => proof && setProofModal(resolveUrl(proof))}
+                  className={`flex items-center gap-3 rounded-2xl border border-zinc-800 bg-surface-card p-4 shadow-card ${
+                    proof ? 'cursor-pointer active:opacity-80' : ''
                   }`}
                 >
-                  <Wallet className="h-6 w-6" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold capitalize text-white">{tx.type}</p>
-                  <p className="text-xs text-zinc-500">
-                    Tra_ID: #{String(tx._id).slice(-6)} •{' '}
-                    {new Date(tx.createdAt).toLocaleString(undefined, {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p
-                    className={`font-semibold ${
-                      tx.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                      tx.type === 'deposit' ? 'bg-emerald-600/30 text-emerald-400' : 'bg-red-600/30 text-red-400'
                     }`}
                   >
-                    {tx.type === 'deposit' ? '+' : '-'}₹{tx.amount}
-                  </p>
-                  <span
-                    className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusClass[tx.status]}`}
-                  >
-                    {statusLabel(tx.status)}
-                  </span>
-                </div>
-              </li>
-            ))}
+                    <Wallet className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold capitalize text-white">{tx.type}</p>
+                    <p className="text-xs text-zinc-500">
+                      Tra_ID: #{String(tx._id).slice(-6)} •{' '}
+                      {new Date(tx.createdAt).toLocaleString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`font-semibold ${
+                        tx.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'
+                      }`}
+                    >
+                      {tx.type === 'deposit' ? '+' : '-'}₹{tx.amount}
+                    </p>
+                    <span
+                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusClass[tx.status]}`}
+                    >
+                      {statusLabel(tx.status)}
+                    </span>
+                    {proof && (
+                      <p className="mt-1 flex items-center justify-end gap-0.5 text-[10px] text-sky-400">
+                        <ZoomIn className="h-3 w-3" /> proof
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
+
+      {/* Proof image modal */}
+      {proofModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setProofModal(null)}
+        >
+          <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setProofModal(null)}
+              className="absolute -right-3 -top-3 rounded-full bg-zinc-800 p-1.5 text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <img
+              src={proofModal}
+              alt="Payment proof"
+              className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       {filterOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-3 sm:items-center">
