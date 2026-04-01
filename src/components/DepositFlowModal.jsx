@@ -120,6 +120,7 @@ export default function DepositFlowModal({ gameId, onClose, onSuccess }) {
 
   useEffect(() => {
     if (step !== 2 || !upiUri) return;
+    if (paymentDetails?.qrImageUrl) return;
     let cancelled = false;
     QRCode.toDataURL(upiUri, { width: 240, margin: 2, color: { dark: '#000000', light: '#ffffff' } })
       .then((url) => {
@@ -131,7 +132,7 @@ export default function DepositFlowModal({ gameId, onClose, onSuccess }) {
     return () => {
       cancelled = true;
     };
-  }, [step, upiUri]);
+  }, [step, upiUri, paymentDetails?.qrImageUrl]);
 
   useEffect(() => {
     if (step !== 2 || !expiresAt) return;
@@ -335,7 +336,13 @@ export default function DepositFlowModal({ gameId, onClose, onSuccess }) {
                 Time Left: {formatMmSs(secondsLeft)}
               </div>
               <div className="flex justify-center">
-                {qrDataUrl ? (
+                {paymentDetails.qrImageUrl ? (
+                  <img
+                    src={paymentDetails.qrImageUrl}
+                    alt="UPI QR"
+                    className="h-52 w-52 rounded-xl border-2 border-slate-200 bg-white object-contain p-2 sm:h-60 sm:w-60"
+                  />
+                ) : qrDataUrl ? (
                   <img
                     src={qrDataUrl}
                     alt="UPI QR"
